@@ -1,0 +1,25 @@
+###
+#
+# Build Kestrel from source. This is currently broken (see https://github.com/twitter/kestrel/issues/125)
+#
+###
+
+FROM thefactory/base
+MAINTAINER Mike Babineau mike@thefactory.com
+
+RUN apt-get update && apt-get -y install openjdk-6-jdk scala=2.9.2+dfsg-1 git-core curl
+
+# sbt (old version specified by kestrel)
+ADD http://scalasbt.artifactoryonline.com/scalasbt/repo/org/scala-sbt/sbt/0.11.2/sbt.deb /tmp/sbt.deb
+RUN dpkg -i /tmp/sbt.deb && rm /tmp/sbt.deb
+
+# Kestrel
+ADD https://github.com/twitter/kestrel/archive/975fd1cc736373f87aaede2fbbf4cc79d163b51b.tar.gz /tmp/kestrel.tgz
+RUN mkdir -p /opt/kestrel && tar xzf /tmp/kestrel.tgz -C /opt/kestrel --strip=1 && rm -f /tmp/kestrel.tgz
+# scala-tools.org is defunct, resolve those dependencies from elsewhere
+RUN sed -i '25iresolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/groups/scala-tools",\n' /opt/kestrel/project/Build.scala
+
+# Oh dear
+RUN export SBT_OPTS="-XX:+CMSClassUnloadingEnabled -XX:PermSize=256M -XX:MaxPermSize=512M -Xmx1g" && \
+	sbt clean update package-dist
+
