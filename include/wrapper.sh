@@ -19,7 +19,7 @@ cat <<- EOF > /opt/kestrel/config.scala
 
 	  queuePath = "/data"
 
-	  clientTimeout = 30.seconds
+	  clientTimeout = None
 
 	  expirationTimerFrequency = 1.second
 
